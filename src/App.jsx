@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  Activity, ArrowDown, BarChart3, Bell, Box, ChevronDown, CircleHelp, CreditCard,
-  Code2, Copy, Eye, FileText, Gauge, Gift, Home, Inbox, Info, Landmark, LifeBuoy, Link2, Menu,
+  Activity, ArrowDown, ArrowUp, ArrowUpRight, BarChart3, Box, ChevronDown, ChevronRight, CircleHelp, Columns3, CreditCard,
+  Code2, Copy, Eye, FileText, Gauge, Gift, Home, Inbox, Info, Landmark, LifeBuoy, Link2, ListFilter, Menu,
   MessageSquare, MoreHorizontal, Package, PanelLeftClose, Paperclip, Pencil, Plus, ReceiptText,
-  Search, Settings, SlidersHorizontal, Sparkles, Users, X, Zap, Globe2,
+  Search, SlidersHorizontal, Sparkles, Users, X, Zap, Globe2,
 } from 'lucide-react'
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -17,13 +18,16 @@ const navItems = [
   { icon: ReceiptText, label: 'Invoices & Credit Notes' },
   { icon: FileText, label: 'Quotes' },
   { icon: Box, label: 'Product Catalog' },
-  { icon: Gauge, label: 'Usage', badge: 'NEW' },
+  { icon: Gauge, label: 'Usages', badge: 'NEW' },
   { icon: CreditCard, label: 'Entitlements' },
   { icon: Landmark, label: 'Logs' },
   { icon: Activity, label: 'RevenueStory', badge: 'NEW' },
   { icon: Gift, label: 'Revenue Recognition' },
   { icon: Inbox, label: 'Classic Reports' },
 ]
+
+const catalogNavLabels = ['Home', 'Customers', 'Subscriptions', 'Invoices & Credit Notes', 'Quotes', 'Product Catalog', 'Usages', 'Entitlements']
+const expandableNavLabels = ['Invoices & Credit Notes', 'Product Catalog', 'Usages', 'Entitlements', 'Revenue Recognition']
 
 const baseLabels = ['Aug 3', 'Aug 7', 'Aug 11', 'Aug 15', 'Aug 19', 'Aug 23', 'Aug 27', 'Sep 1', 'Sep 5', 'Sep 9', 'Sep 13']
 
@@ -70,45 +74,37 @@ function Sidebar({ open, onClose, pageView, onNavigate }) {
   const catalogView = pageView === 'plans' || pageView === 'planDetails' || pageView === 'itemPrice'
   const [catalogOpen, setCatalogOpen] = useState(catalogView)
 
+  const priceSite = pageView === 'planDetails' || pageView === 'itemPrice'
+
   return (
-    <aside className={`sidebar ${open ? 'open' : ''} ${catalogView ? 'plans-sidebar' : ''}`}>
-      {catalogView ? <>
-        <button className="brand" onClick={() => onNavigate('dashboard')}><span className="brand-mark">✣</span><span>Billing</span><ChevronDown size={14} /></button>
-        <button className="site-picker">
-          <span className="site-avatar">◎</span>
-          <span><b>{pageView === 'plans' ? 'usagebilling' : 'beelieve-2025...'}</b><small>{pageView === 'plans' ? 'usagebilling-test.chargeb...' : 'beelieve-2025-ubb-test...'}</small></span>
-          <span className="test-tag">Test</span>
-          <ChevronDown size={13} />
-        </button>
-        {pageView === 'plans' && <button className="site-picker timezone">
-          <Globe2 size={15} />
-          <span><b>usagebilling-t...</b><small>Asia/Calcutta (IST)</small></span>
-          <span className="site-tag">Site</span>
-          <ChevronDown size={13} />
-        </button>}
-        {(pageView === 'planDetails' || pageView === 'itemPrice') && <button className="global-search"><Search size={15} /><span>Go to</span><kbd>⌘ K</kbd></button>}
-      </> : <>
-        <button className="brand" onClick={() => onNavigate('dashboard')}><span className="brand-mark">cb</span><span>billing</span></button>
-        <div className="trial-row"><Zap size={13} /> Usage billing <span>Trial</span></div>
-        <button className="site-picker">
-          <span className="site-avatar">U</span>
-          <span><b>usagebilling-t...</b><small>Aishwarya Nemi</small></span>
-          <ChevronDown size={13} />
-        </button>
-        <button className="global-search"><Search size={15} /><span>Go to</span><kbd>⌘ K</kbd></button>
-      </>}
+    <aside className={`sidebar ${open ? 'open' : ''}`}>
+      <button className="brand" onClick={() => onNavigate('dashboard')}><span className="brand-mark" aria-hidden /><span>Billing</span><ChevronRight size={14} /></button>
+      <button className="site-picker">
+        <span className="site-avatar"><Globe2 size={12} /></span>
+        <span><b>{priceSite ? 'beelieve-2025...' : 'usagebilling'}</b><small>{priceSite ? 'beelieve-2025-ubb-test...' : 'usagebilling-test.chargeb...'}</small></span>
+        <span className="test-tag">Test</span>
+        <ChevronRight size={13} />
+      </button>
+      {!priceSite && <button className="site-picker timezone">
+        <Globe2 size={13} />
+        <span><b>usagebilling-t...</b><small>Asia/Calcutta (IST)</small></span>
+        <span className="site-tag">Site</span>
+        <ChevronRight size={13} />
+      </button>}
+      {pageView !== 'plans' && <button className="global-search"><Search size={13} /><span>Go to</span><kbd>⌘ K</kbd></button>}
       <nav>
-        {navItems.map(({ icon: Icon, label, badge }) => (
+        {navItems.filter(({ label }) => !catalogView || catalogNavLabels.includes(label)).map(({ icon: Icon, label, badge }) => (
           <div className="nav-group" key={label}>
           <button
             className={label === 'Home' && pageView === 'dashboard' ? 'active' : ''}
             onClick={() => {
               if (label === 'Product Catalog') setCatalogOpen(value => !value)
               if (label === 'Home') onNavigate('dashboard')
+              if (label === 'Subscriptions') onNavigate('subscriptions')
             }}
           >
             <Icon size={15} /><span>{label}</span>{badge && <em>{badge}</em>}
-            {['Product Catalog', 'Usage', 'Entitlements', 'Revenue Recognition'].includes(label) && <ChevronDown className={`chevron ${label === 'Product Catalog' && catalogOpen ? 'up' : ''}`} size={12} />}
+            {expandableNavLabels.includes(label) && <ChevronDown className={`chevron ${label === 'Product Catalog' && catalogOpen ? 'up' : ''}`} size={12} />}
           </button>
           {label === 'Product Catalog' && catalogOpen && (
             <div className="catalog-menu">
@@ -121,9 +117,9 @@ function Sidebar({ open, onClose, pageView, onNavigate }) {
         ))}
       </nav>
       <div className="sidebar-bottom">
-        <button className="selected"><BarChart3 size={15} />{catalogView ? 'Catalog Setup Assistant' : 'Custom report assistant'}</button>
-        <button><CircleHelp size={15} />What&apos;s new</button>
-        <button><LifeBuoy size={15} />Need help?</button>
+        <button className="selected"><BarChart3 size={15} />Catalog Setup Assistant</button>
+        <button><CircleHelp size={15} />What&apos;s new<ArrowUpRight className="trailing" size={13} /></button>
+        <button><LifeBuoy size={15} />Need Help?<MoreHorizontal className="trailing" size={14} /></button>
         <button className="profile"><span>AN</span><span><b>Aishwarya Nemi</b><small>aishwarya.nemi@...</small></span><MoreHorizontal size={14} /></button>
       </div>
       <button className="close-sidebar" onClick={onClose}><PanelLeftClose size={18} /></button>
@@ -145,7 +141,7 @@ function PlansPage({ onSelectPlan }) {
         <div className="plans-toolbar-bottom">
           <label className="plans-search"><Search size={14} /><input placeholder="Search for ID / Name" /></label>
           <button className="sort-button">Sort by <ChevronDown size={12} /></button>
-          <button className="view-button">◧ <ChevronDown size={10} /></button>
+          <button className="view-button" aria-label="Table display options"><Columns3 size={13} /><ChevronDown size={10} /></button>
         </div>
       </div>
       <div className="plans-content">
@@ -240,12 +236,12 @@ function PlanDetails({ plan, onBack, onOpenPrice }) {
             <button className="how-to">▷ How to</button>
           </div>
           <div className="pricing-row pricing-head">
-            <div>Currency <span>↑</span><span>≡</span></div>
-            <div>Frequency <span>≡</span></div>
-            <div>Pricing Model <span>≡</span></div>
-            <div>Price <span>≡</span></div>
-            <div>Billing Cycle <span>≡</span></div>
-            <div>Trial <span>≡</span></div>
+            <div>Currency <ArrowUp size={10} /><ListFilter size={10} /></div>
+            <div>Frequency <ListFilter size={10} /></div>
+            <div>Pricing Model <ListFilter size={10} /></div>
+            <div>Price <ListFilter size={10} /></div>
+            <div>Billing Cycle <ListFilter size={10} /></div>
+            <div>Trial <ListFilter size={10} /></div>
             <div>Preview <CircleHelp size={11} /></div>
           </div>
           {pricingRows.map(([frequency, model, price, cycle, trial], index) => (
@@ -318,7 +314,7 @@ function ItemPricePage({ plan, onBack, onAllPlans }) {
         <section className="item-card item-hero">
           <span className="details-active">Active</span>
           <div className="item-hero-head">
-            <h1>&lsquo;{name}&rsquo; USD, Every 10 days</h1>
+            <h1><span className="hero-plan">&apos;{name}&apos;</span> USD, Every 10 days</h1>
             <div className="details-actions item-hero-actions"><button>Edit</button><button>Delete</button></div>
           </div>
           <div className="item-id"><Pencil size={11} /><span>{priceId}</span><Copy size={12} /></div>
@@ -533,7 +529,7 @@ function MetricChart({ metric }) {
       </div>
       <div className="chart-wrap">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 6, left: -18, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 6, left: -8, bottom: 0 }}>
             <defs>
               <linearGradient id={`fill-${metric.data}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#84c8f5" stopOpacity={0.35} />
@@ -541,9 +537,9 @@ function MetricChart({ metric }) {
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="#edf1f4" />
-            <XAxis dataKey="name" interval={5} axisLine={false} tickLine={false} tick={{ fill: '#9aa5ad', fontSize: 12 }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#a4aeb5', fontSize: 12 }} width={38} />
-            <Tooltip contentStyle={{ border: '1px solid #dfe6ea', borderRadius: 6, fontSize: 12 }} />
+            <XAxis dataKey="name" interval={5} axisLine={false} tickLine={false} tick={{ fill: '#9aa5ad', fontSize: 14 }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#a4aeb5', fontSize: 14 }} width={44} />
+            <Tooltip contentStyle={{ border: '1px solid #dfe6ea', borderRadius: 6, fontSize: 14 }} />
             <Area type="linear" dataKey="value" stroke="#5eb4ec" strokeWidth={1.2} fill={`url(#fill-${metric.data})`} />
           </AreaChart>
         </ResponsiveContainer>
@@ -554,16 +550,26 @@ function MetricChart({ metric }) {
 }
 
 function App() {
+  const navigate = useNavigate()
   const [bannerVisible, setBannerVisible] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [range, setRange] = useState('Daily')
   const [pageView, setPageView] = useState('dashboard')
   const [selectedPlan, setSelectedPlan] = useState(['10 day plan', '10-day-plan'])
   const catalogView = pageView === 'plans' || pageView === 'planDetails' || pageView === 'itemPrice'
+  const goTo = view => {
+    if (view === 'subscriptions') {
+      navigate('/subscriptions')
+      setSidebarOpen(false)
+      return
+    }
+    setPageView(view)
+    setSidebarOpen(false)
+  }
 
   return (
     <div className="app-shell">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} pageView={pageView} onNavigate={view => { setPageView(view); setSidebarOpen(false) }} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} pageView={pageView} onNavigate={goTo} />
       <div className={`page ${catalogView ? 'showing-plans' : ''}`}>
         <div className="preview-bar">{catalogView ? 'Test site — Safe to simulate and experiment ⓘ' : 'TEST SITE — Switch to live site when you’re ready'}</div>
         {pageView === 'plans' ? <PlansPage onSelectPlan={plan => { setSelectedPlan(plan); setPageView('planDetails') }} /> : pageView === 'planDetails' ? <PlanDetails plan={selectedPlan} onBack={() => setPageView('plans')} onOpenPrice={() => setPageView('itemPrice')} /> : pageView === 'itemPrice' ? <ItemPricePage plan={selectedPlan} onBack={() => setPageView('planDetails')} onAllPlans={() => setPageView('plans')} /> : <>
@@ -571,8 +577,6 @@ function App() {
           <button className="mobile-menu" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="header-spacer" />
           <button className="product-button">Take Me to Product Page!</button>
-          <button className="icon-button"><Bell size={16} /></button>
-          <button className="icon-button"><Settings size={16} /></button>
         </header>
 
         <main>
